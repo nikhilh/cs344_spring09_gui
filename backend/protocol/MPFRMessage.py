@@ -5,7 +5,7 @@ import struct
 from twisted.internet import reactor
 
 from OFGMessage import OFG_DEFAULT_PORT, OFG_MESSAGES
-from OFGMessage import OFGMessage, LinksAdd, LinksDel, Link, Node, NodesAdd, NodesDel, FlowHop, Flow, FlowsAdd, FlowsDel
+from OFGMessage import OFGMessage, LinksAdd, LinksDel, Link, LinkSpec, Node, NodesAdd, NodesDel, FlowHop, Flow, FlowsAdd, FlowsDel
 from ltprotocol.ltprotocol import LTProtocol
 
 MPFR_PROTOCOL = LTProtocol(OFG_MESSAGES, 'H', 'B')
@@ -86,44 +86,38 @@ def test():
             ]
         server.send_msg_to_client(conn, NodesAdd(nodes))
 
-	links = [
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2),
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1),
+	linkspecs = [
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, 1000000000),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, 1000000000),
 
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 2),
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 1),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 2, 1000000000),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 1, 1000000000),
 
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 2),
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 1),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 2, 1000000000),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 1, 1000000000),
 
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 2),
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 1),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 2, 1000000000),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 1, 1000000000),
 
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 2),
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 1),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 2, 1000000000),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 1, 1000000000),
 
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 2),
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 1),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 2, 1000000000),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 1, 1000000000),
 
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 3),
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 3),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 3, 1000000000),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 3, 1000000000),
 
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 3),
-		Link(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 3),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 3, 1000000000),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 3, 1000000000),
 		]
-        server.send_msg_to_client(conn, LinksAdd(links))
+	server.send_msg_to_client(conn, LinksAdd(linkspecs))
 
 	path = [
-		#FlowHop(2, 0),
-		FlowHop(2, 1),
-		FlowHop(3, 2),
-		#FlowHop(3, 3),
-		#FlowHop(14, 3),
-		#FlowHop(14, 2),
-		#FlowHop(12, 1),
-		#FlowHop(12, 0),
+		FlowHop(2, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2),
+		FlowHop(3, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 2),
 		]
-	flows = [Flow(path),]
+	flows = [Flow(Flow.TYPE_UNKNOWN, 1, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 1, path),]
 	server.send_msg_to_client(conn, FlowsAdd(flows))
 
     server.new_conn_callback = new_conn_callback
