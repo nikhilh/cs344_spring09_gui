@@ -77,6 +77,8 @@ def test():
 	"""
 	print "Incoming connection! yay! :P"
         nodes = [
+            Node(Node.TYPE_HOST, 0),
+            Node(Node.TYPE_HOST, 10),
             Node(Node.TYPE_OPENFLOW_SWITCH, 1),
             Node(Node.TYPE_OPENFLOW_SWITCH, 14),
             Node(Node.TYPE_OPENFLOW_SWITCH, 2),
@@ -87,6 +89,12 @@ def test():
         server.send_msg_to_client(conn, NodesAdd(nodes))
 
 	linkspecs = [
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_HOST, 0), 0, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 0, 1000000000),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 0, Node(Node.TYPE_HOST, 0), 0, 1000000000),
+
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_HOST, 10), 0, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 0, 1000000000),
+		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 0, Node(Node.TYPE_HOST, 10), 0, 1000000000),
+
 		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, 1000000000),
 		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, 1000000000),
 
