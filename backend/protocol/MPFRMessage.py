@@ -34,47 +34,14 @@ def test():
                 # got request to add/del a link: tell the GUI we've done so
                 xport.write(MPFR_PROTOCOL.pack_with_header(ltm))
 
+    print "This gets printed\n"
     from ltprotocol.ltprotocol import LTTwistedServer
-    server = LTTwistedServer(MPFR_PROTOCOL, print_ltm)
-    server.listen(OFG_DEFAULT_PORT)
+
+    def close_conn_callback(conn):
+	print "close_conn_callback: Connection closed\n"
 
     # when the gui connects, tell it about the modules and nodes
     def new_conn_callback(conn):
-	"""
-	modules = [
-            OPModule(Node.TYPE_MODULE_HW, 1, "MAC Lookup"),
-            OPModule(Node.TYPE_MODULE_HW, 2, "TTL Decrement"),
-            OPModule(Node.TYPE_MODULE_HW, 3, "TTL Decrement (FAULTY)"),
-            OPModule(Node.TYPE_MODULE_HW, 4, "Route Lookup"),
-            OPModule(Node.TYPE_MODULE_HW, 5, "Checksum Update"),
-            OPModule(Node.TYPE_MODULE_HW, 6, "TTL / Checksum Validate"),
-            OPModule(Node.TYPE_MODULE_SW, 100, "TTL / Checksum Validate"),
-            OPModule(Node.TYPE_MODULE_SW, 101, "Compar-ison Module"),
-            ]
-        server.send_msg_to_client(conn, OPModulesAdd(modules))
-
-        nodes = [
-            Node(Node.TYPE_IN,       111),
-            Node(Node.TYPE_OUT,      999),
-            Node(Node.TYPE_NETFPGA, 1000),
-            Node(Node.TYPE_NETFPGA, 1001),
-            Node(Node.TYPE_NETFPGA, 1002),
-            Node(Node.TYPE_NETFPGA, 1003),
-            Node(Node.TYPE_NETFPGA, 1004),
-            Node(Node.TYPE_NETFPGA, 1005),
-            Node(Node.TYPE_LAPTOP,  2000),
-            Node(Node.TYPE_LAPTOP,  2001),
-            Node(Node.TYPE_LAPTOP,  2002),
-            ]
-        server.send_msg_to_client(conn, NodesAdd(nodes))
-
-        server.send_msg_to_client(conn, OPTestInfo("hello world", "happy world"))
-
-        # tell the gui the route lookup module on netfpga 1000 works
-        n = Node(Node.TYPE_NETFPGA, 1000)
-        m = Node(Node.TYPE_MODULE_HW, 4)
-        server.send_msg_to_client(conn, OPModuleStatusReply(n, m, "it works!"))
-	"""
 	print "Incoming connection! yay! :P"
         nodes = [
             Node(Node.TYPE_HOST, 0),
@@ -128,7 +95,10 @@ def test():
 	flows = [Flow(Flow.TYPE_UNKNOWN, 1, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 1, path),]
 	server.send_msg_to_client(conn, FlowsAdd(flows))
 
-    server.new_conn_callback = new_conn_callback
+    #server = LTTwistedServer(MPFR_PROTOCOL, print_ltm)
+    server = LTTwistedServer(MPFR_PROTOCOL, print_ltm, new_conn_callback, close_conn_callback)
+    #server.new_conn_callback = new_conn_callback
+    server.listen(OFG_DEFAULT_PORT)
     reactor.run()
 
 if __name__ == "__main__":
