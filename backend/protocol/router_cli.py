@@ -276,6 +276,8 @@ class RouterInterface:
         self.old_neighbors = list()
         self.stats = RouterInterfaceStats()
         self.old_stats = RouterInterfaceStats()
+        self.old_statsIN_change = False
+        self.old_statsOUT_change = False
 
     def getName(self):
         return self.name
@@ -347,6 +349,8 @@ class RouterInterface:
         return self.old_stats
 
     def backupStats(self):
+        self.old_statsIN_change = self.haveChangedStatsIN() 
+        self.old_statsOUT_change = self.haveChangedStatsOUT() 
         self.getOldStats().copyFrom(self.getStats())
 
     # checks for stats change, returns True if changed
@@ -360,6 +364,20 @@ class RouterInterface:
     # checks for OUT stats change, returns True if changed
     def haveChangedStatsOUT(self):
         return not self.getStats().eqOUT( self.getOldStats() )
+
+    def getOldStatsINChange(self):
+        return self.old_statsIN_change
+
+    def getOldStatsOUTChange(self):
+        return self.old_statsOUT_change
+
+    # checks for change in "IN stats change", returns True if changed
+    def hasChangedStatsINChange(self):
+        return ( self.haveChangedStatsIN() != self.getOldStatsINChange() )
+
+    # checks for change in "OUT stats change", returns True if changed
+    def hasChangedStatsOUTChange(self):
+        return ( self.haveChangedStatsOUT() != self.getOldStatsOUTChange() )
 
 class RouterNeighbor:
 

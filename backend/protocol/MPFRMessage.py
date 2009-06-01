@@ -16,6 +16,8 @@ class GUIRouter:
 
 MPFR_PROTOCOL = LTProtocol(OFG_MESSAGES, 'H', 'B')
 rtrs = list()
+GIGABIT = 1000000000
+POLL_INTERVAL = float(0.5)
 
 def run_mpfr_server(port, recv_callback):
     """Starts a server which listens for Open Pipes clients on the specified port.
@@ -73,59 +75,6 @@ def test():
 
     # when the gui connects, tell it about the modules and nodes
     def new_conn_callback(conn):
-	'''
-        nodes = [
-            Node(Node.TYPE_HOST, 0),
-            Node(Node.TYPE_HOST, 10),
-            Node(Node.TYPE_OPENFLOW_SWITCH, 1),
-            Node(Node.TYPE_OPENFLOW_SWITCH, 14),
-            Node(Node.TYPE_OPENFLOW_SWITCH, 2),
-            Node(Node.TYPE_OPENFLOW_SWITCH, 12),
-            Node(Node.TYPE_OPENFLOW_SWITCH, 3),
-            Node(Node.TYPE_OPENFLOW_SWITCH, 13),
-            ]
-        server.send_msg_to_client(conn, NodesAdd(nodes))
-
-	linkspecs = [
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_HOST, 0), 0, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 0, 1000000000),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 0, Node(Node.TYPE_HOST, 0), 0, 1000000000),
-
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_HOST, 10), 0, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 0, 1000000000),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 0, Node(Node.TYPE_HOST, 10), 0, 1000000000),
-
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, 1000000000),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, 1000000000),
-
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 2, 1000000000),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 1, 1000000000),
-
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 2, 1000000000),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 1, 1000000000),
-
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 2, 1000000000),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 1, 1000000000),
-
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 2, 1000000000),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 1, 1000000000),
-
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 2, 1000000000),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 1, 1000000000),
-
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 3, 1000000000),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 3, 1000000000),
-
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 3, 1000000000),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 3, Node(Node.TYPE_OPENFLOW_SWITCH, 13), 3, 1000000000),
-		]
-	server.send_msg_to_client(conn, LinksAdd(linkspecs))
-
-	path = [
-		FlowHop(2, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2),
-		FlowHop(3, Node(Node.TYPE_OPENFLOW_SWITCH, 14), 2),
-		]
-	flows = [Flow(Flow.TYPE_UNKNOWN, 1, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 12), 1, path),]
-	server.send_msg_to_client(conn, FlowsAdd(flows))
-	'''
 	f = open('routers.txt', 'r')
 	lines = f.readlines()
 	f.close()
@@ -138,34 +87,37 @@ def test():
 		if rtr is not None:
 		    rtrs.append(rtr)
 
+	# Get updates the first time
+	for r in rtrs:
+	    r.checkLinkStatus()
+	    r.updateNeighbors()
+	    r.getStats()
+	time.sleep(2)
+
 	#draw the router nodes first
         nodes = []
 	for r in rtrs:
 	    nodes.append(Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(r.routerID)))
         server.send_msg_to_client(conn, NodesAdd(nodes))
 
-	for r in rtrs:
-	    r.checkLinkStatus()
-	    r.updateNeighbors()
-	    r.getStats()
-	time.sleep(2)
 	#draw the links
 	for r in rtrs:
 	    print "Drawing links for router " + r.routerID
 	    linkspecs = []
+	    src_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(r.routerID))
 	    for i in r.interfaces:
 		print "\tInterface : " + i.name
 		if(i.isLinkUp() and (len(i.neighbors) > 0)):
 		    print "\t\tLink is up : neighbor " + i.neighbors[0].getNeighborID()
-		    src_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(r.routerID))
 		    src_port = get_port(i.name)
 		    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(i.neighbors[0].getNeighborID()))
 		    dst_port = get_nbr_iface(i.neighbors[0])
 		    print "\t\tdst_port = " + str(dst_port)
 		    if(dst_port >= 0):
-			linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, 1000000000))
+			linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
 	    server.send_msg_to_client(conn, LinksAdd(linkspecs))
-	while(False):
+
+	while(True):
 	    if(len(rtrs) == 0):
 		print "No routers left in the list - I'm done with this session"
 		return
@@ -173,12 +125,61 @@ def test():
 		r.checkLinkStatus()
 		r.updateNeighbors()
 		r.getStats()
-	    #for r in rtrs:
-		#for i in r.interfaces:
-		    #if link status has changed
-		    #if neighbors have changed
-		    #if flow has changed
-	    time.sleep(0.1)
+
+	    for r in rtrs:
+		src_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(r.routerID))
+		del_links = []
+		add_linkspecs = []
+		del_flows = []
+		add_flows = []
+		for i in r.interfaces:
+		    src_port = get_port(i.name)
+		    old_nbrs = i.getOldNeighbors()
+		    new_nbrs  = i.getNeighbors()
+
+		    #if neighbors have changed or link status has changed
+		    if(i.haveChangedNeighbors() or i.hasChangedLinkStatus()):
+			#if there was an old nbr and active link, delete link and flow
+			if((len(old_nbrs) > 0) and i.wasLinkUp()):
+			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
+			    dst_port = get_nbr_iface(old_nbrs[0])
+			    del_links.append(Link(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port))
+			    # if there was a flow delete it
+			    if(i.getOldStatsOUTChange()):
+				del_flows.append(Flow(Flow.TYPE_UNKNOWN, 0, src_node, src_port, dst_node, dst_port, list()))
+
+			# if there is a new nbr and the link is up, add link and flow
+			if((len(new_nbrs) > 0) and i.isLinkUp()):
+			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
+			    dst_port = get_nbr_iface(new_nbrs[0])
+			    add_linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
+			    # if there is a flow add it
+			    if(i.haveChangedStatsOUT()):
+				add_flows.append(Flow(Flow.TYPE_UNKNOWN, 0, src_node, src_port, dst_node, dst_port, list()))
+
+		    #else, if flow has changed
+		    elif(i.hasChangedStatsOUTChange()):
+			# if there was a flow delete it
+			if(i.getOldStatsOUTChange()):
+			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
+			    dst_port = get_nbr_iface(old_nbrs[0])
+			    del_flows.append(Flow(Flow.TYPE_UNKNOWN, 0, src_node, src_port, dst_node, dst_port, list()))
+			# if there is a flow add it
+			if(i.haveChangedStatsOUT()):
+			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
+			    dst_port = get_nbr_iface(new_nbrs[0])
+			    add_flows.append(Flow(Flow.TYPE_UNKNOWN, 0, src_node, src_port, dst_node, dst_port, list()))
+
+		if(len(del_links) > 0):
+		    server.send_msg_to_client(conn, LinksDel(del_links))
+		if(len(add_linkspecs) > 0):
+		    server.send_msg_to_client(conn, LinksAdd(add_linkspecs))
+		if(len(del_flows) > 0):
+		    server.send_msg_to_client(conn, FlowsDel(del_flows))
+		if(len(add_flows) > 0):
+		    server.send_msg_to_client(conn, FlowsAdd(add_flows))
+
+	    time.sleep(POLL_INTERVAL)
 
     #server = LTTwistedServer(MPFR_PROTOCOL, print_ltm)
     server = LTTwistedServer(MPFR_PROTOCOL, print_ltm, new_conn_callback, close_conn_callback)
