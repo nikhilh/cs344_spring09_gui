@@ -160,12 +160,12 @@ def test():
 		    #else, if flow has changed
 		    elif(i.hasChangedStatsOUTChange()):
 			# if there was a flow delete it
-			if(i.getOldStatsOUTChange()):
+			if((len(old_nbrs) > 0) and i.getOldStatsOUTChange()):
 			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
 			    dst_port = get_nbr_iface(old_nbrs[0])
 			    del_flows.append(Flow(Flow.TYPE_UNKNOWN, 0, src_node, src_port, dst_node, dst_port, list()))
 			# if there is a flow add it
-			if(i.haveChangedStatsOUT()):
+			if((len(new_nbrs) > 0) and i.haveChangedStatsOUT()):
 			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
 			    dst_port = get_nbr_iface(new_nbrs[0])
 			    add_flows.append(Flow(Flow.TYPE_UNKNOWN, 0, src_node, src_port, dst_node, dst_port, list()))

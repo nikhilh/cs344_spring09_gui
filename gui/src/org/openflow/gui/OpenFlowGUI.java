@@ -9,6 +9,9 @@ import org.pzgui.layout.Edge;
 import org.pzgui.layout.PZLayoutManager;
 import org.pzgui.layout.Vertex;
 
+import org.openflow.gui.mpfr.MPFRLayoutManager;
+import org.openflow.gui.mpfr.MPFRConnectionHandler;
+
 /**
  * Provides static methods for running the GUI.
  * 
@@ -27,13 +30,14 @@ public final class OpenFlowGUI {
         short port = serverPort.b;
         
         // create a manager to handle drawing the topology info received by the connection
-        PZLayoutManager gm = new PZLayoutManager();
+        MPFRLayoutManager gm = new MPFRLayoutManager();
         
         // layout the nodes with the spring algorithm by default
         gm.setLayout(new edu.uci.ics.jung.algorithms.layout.SpringLayout2<Vertex, Edge>(gm.getGraph()));
         
         // create a manager to handle the connection itself
-        ConnectionHandler cm = makeDefaultConnection(gm, server, port, true, true);
+        //MPFRConnectionHandler cm = makeDefaultConnection(gm, server, port, true, true);
+        MPFRConnectionHandler cm = new MPFRConnectionHandler(gm, server, port);
         
         // start our managers
         gm.start();

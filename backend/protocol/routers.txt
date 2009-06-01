@@ -1,2 +1,1 @@
-rm128-1.stanford.edu 2300
 rm128-14.stanford.edu 2300
