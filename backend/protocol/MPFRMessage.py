@@ -10,11 +10,63 @@ from OFGMessage import OFGMessage, LinksAdd, LinksDel, Link, LinkSpec, Node, Nod
 from router_cli import *
 from ltprotocol.ltprotocol import LTProtocol
 
-class GUIRouter:
-    def __init__(self, rtr_):
-	self.rtr = rtr_
+MPFR_MESSAGES = []
 
-MPFR_PROTOCOL = LTProtocol(OFG_MESSAGES, 'H', 'B')
+class SetMP(OFGMessage):
+    @staticmethod
+    def get_type():
+        return 0xF0
+
+    def __init__(self, val_, xid=0):
+        OFGMessage.__init__(self, xid)
+	self.val = val_
+
+    def length(self):
+        return OFGMessage.SIZE + 2
+
+    def pack(self):
+        return OFGMessage.pack(self) + struct.pack('> H', self.val)
+
+    @staticmethod
+    def unpack(body):
+        xid = struct.unpack('> I', body[:4])[0]
+        body = body[4:]
+	val = struct.unpack('> H', body[:2])[0]
+        return SetMP(val, xid)
+
+    def __str__(self):
+        return 'Set MULTIPATH: ' + self.val + ' ' + OFGMessage.__str__(self)
+
+MPFR_MESSAGES.append(SetMP)
+
+class SetFR(OFGMessage):
+    @staticmethod
+    def get_type():
+        return 0xF1
+
+    def __init__(self, val_, xid=0):
+        OFGMessage.__init__(self, xid)
+	self.val = val_
+
+    def length(self):
+        return OFGMessage.SIZE + 2
+
+    def pack(self):
+        return OFGMessage.pack(self) + struct.pack('> H', self.val)
+
+    @staticmethod
+    def unpack(body):
+        xid = struct.unpack('> I', body[:4])[0]
+        body = body[4:]
+	val = struct.unpack('> H', body[:2])[0]
+        return SetMP(val, xid)
+
+    def __str__(self):
+        return 'Set FASTREROUTE: ' + self.val + ' ' + OFGMessage.__str__(self)
+
+MPFR_MESSAGES.append(SetFR)
+
+MPFR_PROTOCOL = LTProtocol(OFG_MESSAGES + MPFR_MESSAGES, 'H', 'B')
 rtrs = list()
 GIGABIT = 1000000000
 POLL_INTERVAL = float(0.5)
@@ -64,6 +116,20 @@ def test():
             if t==LinksAdd.get_type() or t==LinksDel.get_type():
                 # got request to add/del a link: tell the GUI we've done so
                 xport.write(MPFR_PROTOCOL.pack_with_header(ltm))
+
+    def receive_ltm(xport, ltm):
+        if ltm is not None:
+            print 'recv: %s' % str(ltm)
+            t = ltm.get_type()
+            if t==LinksAdd.get_type() or t==LinksDel.get_type():
+                # got request to add/del a link: tell the GUI we've done so
+                xport.write(MPFR_PROTOCOL.pack_with_header(ltm))
+	    elif t == SetMP.get_type():
+		for r in rtrs:
+		    r.setMultipath(ltm.val)
+	    elif t == SetFR.get_type():
+		for r in rtrs:
+		    r.setFastReroute(ltm.val)
 
     from ltprotocol.ltprotocol import LTTwistedServer
 
