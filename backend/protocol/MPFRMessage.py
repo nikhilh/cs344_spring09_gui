@@ -2,7 +2,7 @@
 
 import struct
 import time
-import thread
+#import thread
 
 from twisted.internet import reactor
 
@@ -58,7 +58,7 @@ MPFR_MESSAGES.append(SetMPFR)
 
 MPFR_PROTOCOL = LTProtocol(OFG_MESSAGES + MPFR_MESSAGES, 'H', 'B')
 rtrs = list()
-lock = thread.allocate_lock()
+#lock = thread.allocate_lock()
 GIGABIT = 1000000000
 POLL_INTERVAL = float(5)
 
@@ -118,114 +118,115 @@ def test():
                 xport.write(MPFR_PROTOCOL.pack_with_header(ltm))
 	    elif t == SetMPFR.get_type():
 		if(ltm.get_subtype() == SetMPFR.TYPE_MP): 
-		    lock.acquire()
+		    #lock.acquire()
 		    for r in rtrs:
 			r.setMultipath(ltm.val)
-		    lock.release()
+		    #lock.release()
 		elif(ltm.get_subtype() == SetMPFR.TYPE_FR): 
-		    lock.acquire()
+		    #lock.acquire()
 		    for r in rtrs:
 			r.setFastReroute(ltm.val)
-		    lock.release()
+		    #lock.release()
 
     from ltprotocol.ltprotocol import LTTwistedServer
 
     def close_conn_callback(conn):
 	print "close_conn_callback: Connection closed\n"
-	lock.acquire()
+	#lock.acquire()
 	while len(rtrs) > 0:
 	    rtr = rtrs.pop()
 	    print "Deleting router " + rtr.routerID
 	    print str(len(rtrs)) + " routers left"
 	    del(rtr)
-	lock.release()
+	#lock.release()
 
     def update_rtrs(conn):
-	print "Starting the new update_rtrs thread"
-	while(True):
-	    lock.acquire()
-	    if(len(rtrs) == 0):
-		print "No routers left in the list - I'm done with this session"
-		lock.release()
-		return
+	print "Calling update_rtrs"
+	#lock.acquire()
+	if(len(rtrs) == 0):
+	    print "No routers left in the list - I'm done with this session"
+	    #lock.release()
+	    return
 
-	    print str(time.time())+ "\tUpdating the status of all routers"
-	    for r in rtrs:
-		r.checkLinkStatus()
-		r.updateNeighbors()
-		r.getStats()
+	print str(time.time())+ "\tUpdating the status of all routers"
+	for r in rtrs:
+	    r.checkLinkStatus()
+	    r.updateNeighbors()
+	    r.getStats()
 
-	    for r in rtrs:
-		print "Router :" + r.routerID
-		src_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(r.routerID))
-		del_links = []
-		add_linkspecs = []
-		del_flows = []
-		add_flows = []
-		for i in r.interfaces:
-		    src_port = get_port(i.name)
-		    old_nbrs = i.getOldNeighbors()
-		    new_nbrs  = i.getNeighbors()
+	for r in rtrs:
+	    print "Router :" + r.routerID
+	    src_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(r.routerID))
+	    del_links = []
+	    add_linkspecs = []
+	    del_flows = []
+	    add_flows = []
+	    for i in r.interfaces:
+		src_port = get_port(i.name)
+		old_nbrs = i.getOldNeighbors()
+		new_nbrs  = i.getNeighbors()
 
-		    #if neighbors have changed or link status has changed
-		    if(i.haveChangedNeighbors() or i.hasChangedLinkStatus()):
-			#if there was an old nbr and active link, delete link and flow
-			if((len(old_nbrs) > 0) and i.wasLinkUp()):
-			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
-			    dst_port = get_nbr_iface(old_nbrs[0], False)
-			    if(dst_port >= 0):
-				del_links.append(Link(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port))
-				# if there was a flow delete it
-				if(i.getOldStatsOUTChange()):
-				    del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
-
-			# if there is a new nbr and the link is up, add link and flow
-			if((len(new_nbrs) > 0) and i.isLinkUp()):
-			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
-			    dst_port = get_nbr_iface(new_nbrs[0])
-			    if(dst_port >= 0):
-				add_linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
-				# if there is a flow add it
-				if(i.haveChangedStatsOUT()):
-				    add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
-
-		    #else, if flow has changed
-		    elif(i.hasChangedStatsOUTChange()):
-			# if there was a flow delete it
-			if((len(old_nbrs) > 0) and i.getOldStatsOUTChange()):
-			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
-			    dst_port = get_nbr_iface(old_nbrs[0], False)
-			    if(dst_port >= 0):
+		#if neighbors have changed or link status has changed
+		if(i.haveChangedNeighbors() or i.hasChangedLinkStatus()):
+		    #if there was an old nbr and active link, delete link and flow
+		    if((len(old_nbrs) > 0) and i.wasLinkUp()):
+			dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
+			dst_port = get_nbr_iface(old_nbrs[0], False)
+			if(dst_port >= 0):
+			    del_links.append(Link(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port))
+			    # if there was a flow delete it
+			    if(i.getOldStatsOUTChange()):
 				del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
-			# if there is a flow add it
-			if((len(new_nbrs) > 0) and i.haveChangedStatsOUT()):
-			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
-			    dst_port = get_nbr_iface(new_nbrs[0])
-			    if(dst_port >= 0):
+
+		    # if there is a new nbr and the link is up, add link and flow
+		    if((len(new_nbrs) > 0) and i.isLinkUp()):
+			dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
+			dst_port = get_nbr_iface(new_nbrs[0])
+			if(dst_port >= 0):
+			    add_linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
+			    # if there is a flow add it
+			    if(i.haveChangedStatsOUT()):
 				add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
-		    else:
-			print "Interface " + i.getName() + ": No change in link-status ("+ str(i.wasLinkUp()) + "," +str(i.isLinkUp()) + ") , or neighbor-list (" + str(len(old_nbrs)) + "," + str(len(new_nbrs)) + "), or stats (" + str(i.getOldStatsOUTChange()) + "," + str(i.haveChangedStatsOUT()) + ")"
 
-		if(len(del_links) > 0):
-		    server.send_msg_to_client(conn, LinksDel(del_links))
-		    for link in del_links:
-			print "Deleting link: " + str(link.src_node.id) + ":" + str(link.src_port) + " -> " + str(link.dst_node.id) + ":" + str(link.dst_port)
-		if(len(add_linkspecs) > 0):
-		    server.send_msg_to_client(conn, LinksAdd(add_linkspecs))
-		    for link in add_linkspecs:
-			print "Adding link: " + str(link.src_node.id) + ":" + str(link.src_port) + " -> " + str(link.dst_node.id) + ":" + str(link.dst_port)
-		if(len(del_flows) > 0):
-		    server.send_msg_to_client(conn, FlowsDel(del_flows))
-		    for flow in del_flows:
-			print "Deleting flow: " + str(flow.src_node.id) + ":" + str(flow.src_port) + " -> " + str(flow.dst_node.id) + ":" + str(flow.dst_port)
-		if(len(add_flows) > 0):
-		    server.send_msg_to_client(conn, FlowsAdd(add_flows))
-		    for flow in add_flows:
-			print "Adding flow: " + str(flow.src_node.id) + ":" + str(flow.src_port) + " -> " + str(flow.dst_node.id) + ":" + str(flow.dst_port)
+		#else, if flow has changed
+		elif(i.hasChangedStatsOUTChange()):
+		    # if there was a flow delete it
+		    if((len(old_nbrs) > 0) and i.getOldStatsOUTChange()):
+			dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
+			dst_port = get_nbr_iface(old_nbrs[0], False)
+			if(dst_port >= 0):
+			    del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
+		    # if there is a flow add it
+		    if((len(new_nbrs) > 0) and i.haveChangedStatsOUT()):
+			dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
+			dst_port = get_nbr_iface(new_nbrs[0])
+			if(dst_port >= 0):
+			    add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
+		else:
+		    print "Interface " + i.getName() + ": No change in link-status ("+ str(i.wasLinkUp()) + "," +str(i.isLinkUp()) + ") , or neighbor-list (" + str(len(old_nbrs)) + "," + str(len(new_nbrs)) + "), or stats (" + str(i.getOldStatsOUTChange()) + "," + str(i.haveChangedStatsOUT()) + ")"
 
-	    lock.release()
+	    if(len(del_links) > 0):
+		server.send_msg_to_client(conn, LinksDel(del_links))
+		for link in del_links:
+		    print "Deleting link: " + str(link.src_node.id) + ":" + str(link.src_port) + " -> " + str(link.dst_node.id) + ":" + str(link.dst_port)
+	    if(len(add_linkspecs) > 0):
+		server.send_msg_to_client(conn, LinksAdd(add_linkspecs))
+		for link in add_linkspecs:
+		    print "Adding link: " + str(link.src_node.id) + ":" + str(link.src_port) + " -> " + str(link.dst_node.id) + ":" + str(link.dst_port)
+	    if(len(del_flows) > 0):
+		server.send_msg_to_client(conn, FlowsDel(del_flows))
+		for flow in del_flows:
+		    print "Deleting flow " + str(flow.flow_id) + ": " + str(flow.src_node.id) + ":" + str(flow.src_port) + " -> " + str(flow.dst_node.id) + ":" + str(flow.dst_port)
+	    if(len(add_flows) > 0):
+		server.send_msg_to_client(conn, FlowsAdd(add_flows))
+		for flow in add_flows:
+		    print "Adding flow " + str(flow.flow_id) + ": " + str(flow.src_node.id) + ":" + str(flow.src_port) + " -> " + str(flow.dst_node.id) + ":" + str(flow.dst_port)
 
-	    time.sleep(POLL_INTERVAL)
+	#lock.release()
+
+	#time.sleep(POLL_INTERVAL)
+	reactor.callLater(POLL_INTERVAL, lambda: update_rtrs(conn))
+	return
 
 
     # when the gui connects, tell it about the modules and nodes
@@ -284,7 +285,8 @@ def test():
 	    if(len(flows) > 0):
 		server.send_msg_to_client(conn, FlowsAdd(flows))
 
-	thread.start_new_thread(update_rtrs, (conn,))
+	#thread.start_new_thread(update_rtrs, (conn,))
+	reactor.callLater(0, lambda: update_rtrs(conn))
 
     #server = LTTwistedServer(MPFR_PROTOCOL, print_ltm, new_conn_callback, close_conn_callback)
     server = LTTwistedServer(MPFR_PROTOCOL, receive_ltm, new_conn_callback, close_conn_callback)
