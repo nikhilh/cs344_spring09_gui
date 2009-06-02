@@ -325,8 +325,9 @@ public class Topology {
         if(flows == null)
             flowsMap.put(newFlow.getID(), new Flow[]{newFlow});
         else {
+        	return;
             // flow(s) with this ID already exist; add it to the list
-            Flow[] newFlows = new Flow[flows.length + 1];
+            /*Flow[] newFlows = new Flow[flows.length + 1];
             System.arraycopy(flows, 0, newFlows, 0, flows.length);
             newFlows[flows.length] =  newFlow;
             
@@ -337,7 +338,7 @@ public class Topology {
                     if(newFlow.hasSegment(segment))
                         newFlow.ignoreSegment(segment);
                 }
-            }
+            }*/
         }
         manager.addDrawable(newFlow);
     }

@@ -5,7 +5,7 @@
 import socket, string, BufferedSocket, re, sys
 import math
 
-FLOW_THRESHOLD_BYTES = 2500
+FLOW_THRESHOLD_BYTES = 10000
 
 class Router:
     

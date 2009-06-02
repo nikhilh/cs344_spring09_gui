@@ -61,7 +61,7 @@ MPFR_PROTOCOL = LTProtocol(OFG_MESSAGES + MPFR_MESSAGES, 'H', 'B')
 rtrs = list()
 #lock = thread.allocate_lock()
 GIGABIT = 1000000000
-POLL_INTERVAL = float(1)
+POLL_INTERVAL = float(0.2)
 
 def run_mpfr_server(port, recv_callback):
     """Starts a server which listens for MPFR clients on the specified port.
@@ -185,26 +185,21 @@ def test():
 			dst_port = get_nbr_iface(new_nbrs[0])
 			if(dst_port >= 0):
 			    add_linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
-			    # if there is a new flow add it
-			    if(i.haveChangedStatsOUT() and i.hasChangedStatsOUTChange()):
-				add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
 
-		#else, if flow has changed
-		elif(i.hasChangedStatsOUTChange()):
-		    # if there was a flow delete it
-		    if((len(old_nbrs) > 0) and i.getOldStatsOUTChange()):
-			dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
-			dst_port = get_nbr_iface(old_nbrs[0], False)
-			if(dst_port >= 0):
-			    del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
-		    # if there is a flow add it
-		    if((len(new_nbrs) > 0) and i.haveChangedStatsOUT()):
-			dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
-			dst_port = get_nbr_iface(new_nbrs[0])
-			if(dst_port >= 0):
-			    add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
+		# if there is a flow add it
+		if(i.haveChangedStatsOUT() and (len(new_nbrs) > 0)):
+		    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
+		    dst_port = get_nbr_iface(new_nbrs[0])
+		    if(dst_port >= 0):
+			add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
+		# else delete it
+		elif(len(old_nbrs) > 0):
+		    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
+		    dst_port = get_nbr_iface(old_nbrs[0], False)
+		    if(dst_port >= 0):
+			del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
 		else:
-		    print "Interface " + i.getName() + ": No change in link-status ("+ str(i.wasLinkUp()) + "," +str(i.isLinkUp()) + ") , or neighbor-list (" + str(len(old_nbrs)) + "," + str(len(new_nbrs)) + "), or stats (" + str(i.getOldStatsOUTChange()) + "," + str(i.haveChangedStatsOUT()) + ")"
+		    print "Interface " + i.getName() + ": No change in flows: link-status ("+ str(i.wasLinkUp()) + "," +str(i.isLinkUp()) + ") , or neighbor-list (" + str(len(old_nbrs)) + "," + str(len(new_nbrs)) + "), or stats (" + str(i.getOldStatsOUTChange()) + "," + str(i.haveChangedStatsOUT()) + ")"
 
 	    if(len(del_links) > 0):
 		server.send_msg_to_client(conn, LinksDel(del_links))
