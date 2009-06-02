@@ -177,7 +177,7 @@ def test():
 				del_links.append(Link(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port))
 				# if there was a flow delete it
 				if(i.getOldStatsOUTChange()):
-				    del_flows.append(Flow(Flow.TYPE_UNKNOWN, 0, src_node, src_port, dst_node, dst_port, list()))
+				    del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
 
 			# if there is a new nbr and the link is up, add link and flow
 			if((len(new_nbrs) > 0) and i.isLinkUp()):
@@ -187,7 +187,7 @@ def test():
 				add_linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
 				# if there is a flow add it
 				if(i.haveChangedStatsOUT()):
-				    add_flows.append(Flow(Flow.TYPE_UNKNOWN, 0, src_node, src_port, dst_node, dst_port, list()))
+				    add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
 
 		    #else, if flow has changed
 		    elif(i.hasChangedStatsOUTChange()):
@@ -196,13 +196,13 @@ def test():
 			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
 			    dst_port = get_nbr_iface(old_nbrs[0], False)
 			    if(dst_port >= 0):
-				del_flows.append(Flow(Flow.TYPE_UNKNOWN, 0, src_node, src_port, dst_node, dst_port, list()))
+				del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
 			# if there is a flow add it
 			if((len(new_nbrs) > 0) and i.haveChangedStatsOUT()):
 			    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
 			    dst_port = get_nbr_iface(new_nbrs[0])
 			    if(dst_port >= 0):
-				add_flows.append(Flow(Flow.TYPE_UNKNOWN, 0, src_node, src_port, dst_node, dst_port, list()))
+				add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
 		    else:
 			print "Interface " + i.getName() + ": No change in link-status ("+ str(i.wasLinkUp()) + "," +str(i.isLinkUp()) + ") , or neighbor-list (" + str(len(old_nbrs)) + "," + str(len(new_nbrs)) + "), or stats (" + str(i.getOldStatsOUTChange()) + "," + str(i.haveChangedStatsOUT()) + ")"
 
@@ -278,7 +278,7 @@ def test():
 			print r.routerID + ":" + str(src_port) + " -> " + i.neighbors[0].getNeighborID() + ":" + str(dst_port)
 			linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
 			if(i.haveChangedStatsOUT()):
-			    flows.append(Flow(Flow.TYPE_UNKNOWN, 0, src_node, src_port, dst_node, dst_port, list()))
+			    flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
 	    if(len(linkspecs) > 0):
 		server.send_msg_to_client(conn, LinksAdd(linkspecs))
 	    if(len(flows) > 0):
