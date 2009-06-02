@@ -3,6 +3,9 @@
 # Stanford University
 
 import socket, string, BufferedSocket, re, sys
+import math
+
+FLOW_THRESHOLD_BYTES = 2500
 
 class Router:
     
@@ -439,16 +442,18 @@ class RouterInterfaceStats:
         self.bytesOUT = val
 
     def eqIN(self, other):
-        if(other.getPacketsIN() != self.getPacketsIN()):
-            return False
-        if(other.getBytesIN() != self.getBytesIN()):
+	#if(other.getPacketsIN() != self.getPacketsIN()):
+	    #return False
+	#if(other.getBytesIN() != self.getBytesIN()):
+        if(abs(other.getBytesIN() - self.getBytesIN()) > FLOW_THRESHOLD_BYTES):
             return False
         return True
 
     def eqOUT(self, other):
-        if(other.getPacketsOUT() != self.getPacketsOUT()):
-            return False
-        if(other.getBytesOUT() != self.getBytesOUT()):
+	#if(other.getPacketsOUT() != self.getPacketsOUT()):
+	    #return False
+	#if(other.getBytesOUT() != self.getBytesOUT()):
+	if(abs(other.getBytesOUT() - self.getBytesOUT()) > FLOW_THRESHOLD_BYTES):
             return False
         return True
 

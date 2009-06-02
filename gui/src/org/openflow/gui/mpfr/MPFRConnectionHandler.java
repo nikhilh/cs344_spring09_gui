@@ -23,7 +23,7 @@ public class MPFRConnectionHandler extends ConnectionHandler implements
 
 	private final MPFRLayoutManager manager;
 	public MPFRConnectionHandler(MPFRLayoutManager manager, String ip, int port) {
-		super(new Topology(manager), ip, port, true, true);
+		super(new Topology(manager), ip, port, false, false);
 		this.manager = manager;
 		manager.addDrawableEventListener(this);
 		manager.addCheckBoxListener(this);

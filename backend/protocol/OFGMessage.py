@@ -4,6 +4,7 @@ import array
 import hashlib
 import struct
 import sys
+import math
 from os import urandom
 
 from twisted.internet import reactor

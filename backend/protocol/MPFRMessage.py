@@ -2,6 +2,7 @@
 
 import struct
 import time
+#import math
 #import thread
 
 from twisted.internet import reactor
@@ -60,10 +61,10 @@ MPFR_PROTOCOL = LTProtocol(OFG_MESSAGES + MPFR_MESSAGES, 'H', 'B')
 rtrs = list()
 #lock = thread.allocate_lock()
 GIGABIT = 1000000000
-POLL_INTERVAL = float(5)
+POLL_INTERVAL = float(1)
 
 def run_mpfr_server(port, recv_callback):
-    """Starts a server which listens for Open Pipes clients on the specified port.
+    """Starts a server which listens for MPFR clients on the specified port.
 
     @param port  the port to listen on
     @param recv_callback  the function to call with received message content
@@ -184,8 +185,8 @@ def test():
 			dst_port = get_nbr_iface(new_nbrs[0])
 			if(dst_port >= 0):
 			    add_linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
-			    # if there is a flow add it
-			    if(i.haveChangedStatsOUT()):
+			    # if there is a new flow add it
+			    if(i.haveChangedStatsOUT() and i.hasChangedStatsOUTChange()):
 				add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
 
 		#else, if flow has changed
@@ -279,7 +280,9 @@ def test():
 			print r.routerID + ":" + str(src_port) + " -> " + i.neighbors[0].getNeighborID() + ":" + str(dst_port)
 			linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
 			if(i.haveChangedStatsOUT()):
-			    flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list()))
+			    flow = Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), src_node, src_port, dst_node, dst_port, list())
+			    flows.append(flow)
+			    print "Adding flow " + str(flow.flow_id) + ": " + str(flow.src_node.id) + ":" + str(flow.src_port) + " -> " + str(flow.dst_node.id) + ":" + str(flow.dst_port)
 	    if(len(linkspecs) > 0):
 		server.send_msg_to_client(conn, LinksAdd(linkspecs))
 	    if(len(flows) > 0):
