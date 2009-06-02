@@ -42,6 +42,7 @@ public class MPFRLayoutManager extends PZLayoutManager {
         if(getWindowIndex(w) == 0) {
             // set the title
             w.setTitle("CS344 - MultiPath Routing and Fast Reroute");
+            w.setCustomTitle("CS344 - MultiPath Routing and Fast Reroute");
             
             // reserve space for a custom panel
             w.getContentPane().add(mpfrPanel);
