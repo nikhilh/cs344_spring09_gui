@@ -186,7 +186,7 @@ class Router:
 
     # updates link status for every interface (this should be called often)
     def checkLinkStatus(self):
-        link_re = re.compile('If\s+name:\s+(\w+)\s+link:\s(\d)')
+        link_re = re.compile('If\s+name:\s+(\w+)\s+link:\s*(\d)')
         self.sock.writeline("show hw about")
         while( True ):
             try:

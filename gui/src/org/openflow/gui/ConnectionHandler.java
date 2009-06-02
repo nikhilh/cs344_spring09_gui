@@ -52,7 +52,7 @@ import org.pzgui.PZManager;
 public class ConnectionHandler implements MessageProcessor<OFGMessage>,
                                           PZClosing {
     /** the connection being managed */
-    private final BackendConnection<OFGMessage> connection;
+    protected final BackendConnection<OFGMessage> connection;
     
     /** the topology this connection populates */
     private final Topology topology;

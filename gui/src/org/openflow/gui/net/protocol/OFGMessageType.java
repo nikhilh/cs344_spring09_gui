@@ -77,14 +77,11 @@ public enum OFGMessageType {
     STAT_REPLY((byte)0x21),
     
     /**
-     * Set Multipath routing
+     * Set Multipath/FastRe routing
      */
-    SET_MP((byte)0xF0),
-    
-    /**
-     * Set Fast Reroute
-     */
-    SET_FR((byte)0xF1)
+    SET_MPFR((byte)0xF0),
+ 
+
 
     ;
 
@@ -175,8 +172,7 @@ public enum OFGMessageType {
             case LINKS_REQUEST:
             case FLOWS_REQUEST:
             case STAT_REQUEST:
-            case SET_MP:
-            case SET_FR:
+            case SET_MPFR:
                 throw new IOException("Received unexpected message type: " + t.toString() + " (len=" + len + "B)");
                 
             default:
