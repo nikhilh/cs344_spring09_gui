@@ -1,6 +1,7 @@
 package org.openflow.gui.drawables;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Polygon;
@@ -94,6 +95,19 @@ public class Flow extends AbstractDrawable {
         segmentsToIgnore.remove(s);
     }
     
+    /** Throughput of the flow in Kbits/sec */
+    private int throughput = -1;
+    
+    /** Get throughput of the flow in Kbits/sec */
+    public int getThroughput() {
+    	return this.throughput;
+    }
+    
+    /** Set throughput of the flow in Kbits/sec */
+    public void setThroughput(int xput) {
+    	this.throughput = xput;
+    }
+    
     
     // ------------------- Drawing ------------------ //
     
@@ -116,7 +130,7 @@ public class Flow extends AbstractDrawable {
     private long lastRedraw = System.currentTimeMillis();
     
     /** color of the interior of the circles making up the flow */
-    private Paint paintConn = Color.BLUE;
+    private Paint paintConn = Color.RED;
     
     /** color of the exterior of the circles making up the flow */
     private Color colorConnBorder = Color.BLACK;
@@ -185,6 +199,27 @@ public class Flow extends AbstractDrawable {
             }
             else
                 drawLine(gfx, from, to, prevPathEltOn, pathEltOn);
+            
+            // Nikhil - draw text info about the flow
+            // Transform the gfx object first
+            // Transform the gfx object back
+            Vector2f dir = Vector2f.subtract(to, from);
+            Vector2f midPoint = Vector2f.add(from, Vector2f.multiply(dir, (float)0.5));
+            Vector2f textRenderPoint = Vector2f.add(midPoint, new Vector2f((float)0.0, -(float)getPointSize()));
+            if(dir.x < 0) {
+            	dir.y = - dir.y;
+            	dir.x = - dir.x;
+            }
+            dir.x = Math.abs(dir.x);
+            double rotAngle = Math.atan2(dir.y, dir.x);
+            gfx.rotate(rotAngle, textRenderPoint.x, textRenderPoint.y);
+            if(getThroughput() > 0) {
+            	gfx.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
+            	gfx.drawString(Integer.toString(getThroughput()), textRenderPoint.x, textRenderPoint.y);
+            }
+            
+            gfx.rotate(-rotAngle, textRenderPoint.x, textRenderPoint.y);
+            
             
             prevPathEltOn = pathEltOn;
         }
@@ -287,6 +322,7 @@ public class Flow extends AbstractDrawable {
 
         gfx.setPaint(colorConnBorder);
         gfx.drawOval((int)x, (int)y, size, size);
+        
     }
     
     /** Gets the width of the line within which segments of the flow are drawn */

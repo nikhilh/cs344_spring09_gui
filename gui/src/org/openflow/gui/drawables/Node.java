@@ -4,6 +4,7 @@ import java.awt.Composite;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 
 import org.pzgui.icon.GeometricIcon;
@@ -133,8 +134,9 @@ public abstract class Node extends AbstractLayoutable implements Vertex<Link> {
         }
         else {
             // draw a rectangle around the icon
-            outline = new Rectangle2D.Double(getX()-w/2, getY()-h/2, w, h);
-            gfx.draw(outline);
+            //outline = new Rectangle2D.Double(getX()-w/2, getY()-h/2, w, h);
+            outline = new Ellipse2D.Double(getX()-w/2, getY()-h/2, w, h);
+        	gfx.draw(outline);
             gfx.setPaint(outlineColor);
             gfx.fill(outline);
         }

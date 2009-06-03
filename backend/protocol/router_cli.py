@@ -5,7 +5,9 @@
 import socket, string, BufferedSocket, re, sys
 import math
 
-FLOW_THRESHOLD_BYTES = 10000
+POLL_INTERVAL = float(0.2)
+FLOW_THRESHOLD_RATE = 50    #KBytes/sec
+FLOW_THRESHOLD_BYTES = FLOW_THRESHOLD_RATE*1024*POLL_INTERVAL
 
 class Router:
     
@@ -350,6 +352,9 @@ class RouterInterface:
 
     def getOldStats(self):
         return self.old_stats
+
+    def getStatsChange(self):
+        return (self.getStats().getBytesOUT() - self.getOldStats().getBytesOUT())
 
     def backupStats(self):
         self.old_statsIN_change = self.haveChangedStatsIN() 

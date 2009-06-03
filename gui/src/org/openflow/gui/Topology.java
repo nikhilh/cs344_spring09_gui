@@ -12,8 +12,6 @@ import org.openflow.gui.drawables.Link.LinkExistsException;
 import org.openflow.gui.net.BackendConnection;
 import org.openflow.gui.net.protocol.LinkType;
 import org.openflow.gui.net.protocol.OFGMessage;
-import org.openflow.util.FlowHop;
-import org.openflow.util.Pair;
 import org.openflow.util.RefTrack;
 import org.pzgui.PZManager;
 

@@ -1,14 +1,17 @@
 package org.openflow.gui.drawables;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 
+
 import org.openflow.gui.net.protocol.NodeType;
 import org.openflow.protocol.SwitchDescriptionStats;
 import org.openflow.util.string.DPIDUtil;
+import org.pzgui.icon.ImageIcon;
 import org.pzgui.icon.ShapeIcon;
 
 /**
@@ -31,16 +34,17 @@ public class OpenFlowSwitch extends NodeWithPorts {
     
     public OpenFlowSwitch(String name, int x, int y, long dpid, NodeType nt) {
         super(NodeType.OPENFLOW_SWITCH, name, x, y,
-                new ShapeIcon(DEFAULT_SHAPE,
-                              nt==NodeType.OPENFLOW_WIRELESS_ACCESS_POINT ? DEFAULT_FILL_WIFI : DEFAULT_FILL));
-        this.datapathID = dpid;
+                //new ShapeIcon(DEFAULT_SHAPE,
+                //              nt==NodeType.OPENFLOW_WIRELESS_ACCESS_POINT ? DEFAULT_FILL_WIFI : DEFAULT_FILL));
+        		new ImageIcon("images/router_hi.png", DEFAULT_SIZE, DEFAULT_SIZE));
+        		this.datapathID = dpid;
     }
     
     
     // ------------------- Drawing ------------------ //
     
     /** default size of the DEFAULT_SHAPE */
-    public static final int DEFAULT_SIZE = 40;
+    public static final int DEFAULT_SIZE = 80;
     
     /** default shape used to represent a switch */
     public static final Shape DEFAULT_SHAPE = new Ellipse2D.Double(0, 0, DEFAULT_SIZE, DEFAULT_SIZE);
@@ -55,6 +59,7 @@ public class OpenFlowSwitch extends NodeWithPorts {
      */
     public void drawObject(Graphics2D gfx) {
         super.drawObject(gfx);
+        gfx.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
         
         int x = getX() - getIcon().getWidth() / 2;
         int y = getY() - getIcon().getHeight() / 2;
@@ -62,7 +67,7 @@ public class OpenFlowSwitch extends NodeWithPorts {
             y += gfx.getFontMetrics().getHeight();
             
         // display switch description stats on mouse over
-        if(this.isHovered() || this.isSelected()) {
+        //if(this.isHovered() || this.isSelected()) {
             gfx.drawString(DPIDUtil.dpidToHex(getID()), x, y);
             y += gfx.getFontMetrics().getHeight();
 
@@ -83,7 +88,7 @@ public class OpenFlowSwitch extends NodeWithPorts {
             
             if(isStringSet(serial_num))
                 gfx.drawString(serial_num, x, y);
-        }
+        //}
     }
     
  

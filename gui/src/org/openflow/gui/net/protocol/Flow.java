@@ -16,6 +16,9 @@ public class Flow {
     /** flow identifier */
     public final int id;
     
+    /** flow throughput */
+    public final int xput;
+    
     public final Node srcNode;
     public final short srcPort;
     
@@ -25,9 +28,10 @@ public class Flow {
     /** the flow's path from source to destination (inclusive) */
     public final FlowHop[] path;
     
-    public Flow(final FlowType type, final int id, Node srcNode, short srcPort, Node dstNode, short dstPort, final FlowHop... path) {
+    public Flow(final FlowType type, final int id, final int xput, Node srcNode, short srcPort, Node dstNode, short dstPort, final FlowHop... path) {
         this.type = type;
         this.id = id;
+        this.xput = xput;
         this.srcNode = srcNode;
         this.srcPort = srcPort;
         this.dstNode = dstNode;
@@ -35,9 +39,10 @@ public class Flow {
         this.path = path;
     }
     
-    public Flow(final FlowType type, final int id, Node srcNode, short srcPort, Node dstNode, short dstPort, final Collection<FlowHop> path) {
+    public Flow(final FlowType type, final int id, final int xput, Node srcNode, short srcPort, Node dstNode, short dstPort, final Collection<FlowHop> path) {
         this.type = type;
         this.id = id;
+        this.xput = xput;
         this.srcNode = srcNode;
         this.srcPort = srcPort;
         this.dstNode = dstNode;
@@ -52,12 +57,13 @@ public class Flow {
     
     /** This returns the length of Flow */
     public int length() {
-        return 10 + path.length * FlowHop.SIZEOF;
+        return 10 + 4 + path.length * FlowHop.SIZEOF;
     }
     
     public void write(DataOutput out) throws IOException {
         out.writeShort(type.getTypeID());
         out.writeInt(id);
+        out.writeInt(xput);
         srcNode.write(out);
         out.writeShort(srcPort);
         dstNode.write(out);
@@ -68,7 +74,7 @@ public class Flow {
     }
     
     public String toString() {
-        String ret = "Flow:" + type.toString() + ":" + id + ":" + srcNode + ":" + srcPort + "{";
+        String ret = "Flow:" + type.toString() + ":" + id + ":" + xput + ":" + srcNode + ":" + srcPort + "{";
         for(FlowHop e : path)
             ret += e.toString() + ", ";
         

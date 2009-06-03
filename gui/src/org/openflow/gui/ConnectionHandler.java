@@ -383,6 +383,7 @@ public class ConnectionHandler implements MessageProcessor<OFGMessage>,
             }
             
             Flow flow = new Flow(x.type, x.id, hops);
+            flow.setThroughput(x.xput);
             topology.addFlow(flow);
         }
     }

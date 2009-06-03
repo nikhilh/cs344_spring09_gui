@@ -479,9 +479,10 @@ class FlowHop:
 class Flow:
     TYPE_UNKNOWN = 0
 
-    def __init__(self, flow_type, flow_id, src_node, src_port, dst_node, dst_port, path):
+    def __init__(self, flow_type, flow_id, xput, src_node, src_port, dst_node, dst_port, path):
         self.flow_type = int(flow_type)
         self.flow_id = int(flow_id)
+	self.flow_xput = int(xput)
         self.src_node = src_node
         self.src_port = int(src_port)
         self.dst_node = dst_node
@@ -491,13 +492,13 @@ class Flow:
     def pack(self):
         src = self.src_node.pack() + struct.pack('> H', self.src_port)
         dst = self.dst_node.pack() + struct.pack('> H', self.dst_port)
-        header = struct.pack('> H I', self.flow_type, self.flow_id) + src + dst + struct.pack('> H', len(self.path))
+        header = struct.pack('> H I I', self.flow_type, self.flow_id, self.flow_xput) + src + dst + struct.pack('> H', len(self.path))
         body = ''.join(hop.pack() for hop in self.path)
         return header + body
 
     @staticmethod
     def unpack(buf):
-        flow_type, flow_id = struct.unpack('> H I', buf[:6])
+        flow_type, flow_id, flow_xput  = struct.unpack('> H I I', buf[:10])
         buf = buf[6:]
         src_node = Node.unpack(buf[:Node.SIZE])
         buf = buf[Node.SIZE:]
@@ -514,17 +515,17 @@ class Flow:
             path.append(FlowHop.unpack(buf[:FlowHop.SIZE]))
             buf = buf[FlowHop.SIZE:]
 
-        return Flow(flow_type, flow_id, src_node, src_port, dst_node, dst_port, path)
+        return Flow(flow_type, flow_id, flow_xput, src_node, src_port, dst_node, dst_port, path)
 
     def length(self):
-        return 8 + 2*(2+Node.SIZE) + FlowHop.SIZE * len(self.path)
+        return 8 + 4 + 2*(2+Node.SIZE) + FlowHop.SIZE * len(self.path)
 
     @staticmethod
     def type_to_str(flow_type):
         return 'unknown'
 
     def __str__(self):
-        return 'Flow:%s:%u:src=%s:%u{%s}dst=%s:%u' % (Flow.type_to_str(self.flow_type), self.flow_id,
+	return 'Flow:%s:%u:%u:src=%s:%u{%s}dst=%s:%u' % (Flow.type_to_str(self.flow_type), self.flow_id, self.flow_xput,
                                                       str(self.src_node), self.src_port,
                                                       ','.join(str(hop) for hop in self.path),
                                                       str(self.dst_node), self.dst_port)

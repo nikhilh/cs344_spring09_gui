@@ -6,7 +6,6 @@ import org.openflow.util.Pair;
 import org.pzgui.DialogHelper;
 import org.pzgui.PZManager;
 import org.pzgui.layout.Edge;
-import org.pzgui.layout.PZLayoutManager;
 import org.pzgui.layout.Vertex;
 
 import org.openflow.gui.mpfr.MPFRLayoutManager;
