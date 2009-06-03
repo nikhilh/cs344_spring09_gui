@@ -2,6 +2,7 @@ package org.openflow.gui.drawables;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Polygon;
@@ -108,6 +109,9 @@ public class Flow extends AbstractDrawable {
     	this.throughput = xput;
     }
     
+    /** Font used to display throughput information */
+    private Font xputFont = new Font(Font.SANS_SERIF, Font.BOLD, 20);
+    
     
     // ------------------- Drawing ------------------ //
     
@@ -205,17 +209,22 @@ public class Flow extends AbstractDrawable {
             // Transform the gfx object back
             Vector2f dir = Vector2f.subtract(to, from);
             Vector2f midPoint = Vector2f.add(from, Vector2f.multiply(dir, (float)0.5));
-            Vector2f textRenderPoint = Vector2f.add(midPoint, new Vector2f((float)0.0, -(float)getPointSize()));
+            
             if(dir.x < 0) {
             	dir.y = - dir.y;
             	dir.x = - dir.x;
             }
-            dir.x = Math.abs(dir.x);
+            dir = Vector2f.makeUnit(dir);
+            String xputString = Integer.toString(getThroughput()) + " kbps";
+            FontMetrics currentMetrics = gfx.getFontMetrics(xputFont);
+            Vector2f offset = Vector2f.multiply(dir, currentMetrics.stringWidth(xputString)/2);
+            Vector2f textRenderPoint = Vector2f.add(midPoint, new Vector2f((float)0.0, -(float)getPointSize()));
+            textRenderPoint = Vector2f.subtract(textRenderPoint, offset);
             double rotAngle = Math.atan2(dir.y, dir.x);
             gfx.rotate(rotAngle, textRenderPoint.x, textRenderPoint.y);
             if(getThroughput() > 0) {
-            	gfx.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
-            	gfx.drawString(Integer.toString(getThroughput()), textRenderPoint.x, textRenderPoint.y);
+            	gfx.setFont(xputFont);
+            	gfx.drawString(xputString, textRenderPoint.x, textRenderPoint.y);
             }
             
             gfx.rotate(-rotAngle, textRenderPoint.x, textRenderPoint.y);

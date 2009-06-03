@@ -1,10 +1,14 @@
 package org.openflow.gui.mpfr;
 
+import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.event.ItemListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JCheckBox;
+import javax.swing.border.Border;
 
 
 import org.pzgui.PZWindow;
@@ -14,20 +18,23 @@ public class MPFRLayoutManager extends PZLayoutManager {
 
 	public static final int RESERVED_HEIGHT_BOTTOM = 100;
 	private JPanel mpfrPanel = new JPanel();
-	JCheckBox mpCheckBox = new JCheckBox("Multipath Routing", false);
-	JCheckBox frCheckBox = new JCheckBox("Fast Reroute", false);
+	private JCheckBox mpCheckBox = new JCheckBox("Multipath Routing", false);
+	private JCheckBox frCheckBox = new JCheckBox("Fast Reroute", false);
 	
 	public MPFRLayoutManager() {
 		super();
 		/**
-		   * The the checkbox.
+		   * The MPFR checkboxes.
 		   */
-		
-		frCheckBox.setVisible(true);
+
+		mpCheckBox.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
+		frCheckBox.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
 		mpfrPanel.setLayout(new FlowLayout());
+		mpfrPanel.setBackground(Color.getHSBColor((float)0.0, (float)0.0, (float)0.7));
+		Border blackline=BorderFactory.createLineBorder(Color.GRAY, 2);
+		mpfrPanel.setBorder(blackline);
 		mpfrPanel.add(mpCheckBox);
 		mpfrPanel.add(frCheckBox);
-		mpfrPanel.setVisible(true);
 
 	}
 	
@@ -53,7 +60,7 @@ public class MPFRLayoutManager extends PZLayoutManager {
      */
     public void setLayoutSize(int w, int h) {
         super.setLayoutSize(w, h);
-        int margin = 20; 
+        int margin = 10; 
         mpfrPanel.setBounds(0, h + margin, w, RESERVED_HEIGHT_BOTTOM - 2 * margin);
     }
     

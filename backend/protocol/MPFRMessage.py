@@ -249,8 +249,8 @@ def test():
 		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 0, Node(Node.TYPE_HOST, 13), 0, GIGABIT),
 		]
 	flows = [
-		Flow(Flow.TYPE_UNKNOWN, 12345, 20, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 2, list()),
-		Flow(Flow.TYPE_UNKNOWN, 54321, 45, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, list()),
+		Flow(Flow.TYPE_UNKNOWN, 12345, 1000, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 2, list()),
+		Flow(Flow.TYPE_UNKNOWN, 54321, 1100, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, list()),
 		]
 	server.send_msg_to_client(conn, NodesAdd(rtr_nodes))
 	server.send_msg_to_client(conn, NodesAdd(host_nodes))

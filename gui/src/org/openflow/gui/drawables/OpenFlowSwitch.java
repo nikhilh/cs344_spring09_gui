@@ -53,6 +53,9 @@ public class OpenFlowSwitch extends NodeWithPorts {
     public static final Paint DEFAULT_FILL = new Color(128, 128, 255);
     public static final Paint DEFAULT_FILL_WIFI = new Color(128, 255, 128);
     
+    /** Font used to display OFSwitch DPID */
+    private Font dpidFont = new Font(Font.SANS_SERIF, Font.BOLD, 15);
+    
     /** 
      * Uses super.drawObject() to do most of the work and then draws switch
      * description stats if the switch is being hovered over or is selected.
@@ -68,6 +71,7 @@ public class OpenFlowSwitch extends NodeWithPorts {
             
         // display switch description stats on mouse over
         //if(this.isHovered() || this.isSelected()) {
+        	gfx.setFont(dpidFont);
             gfx.drawString(DPIDUtil.dpidToHex(getID()), x, y);
             y += gfx.getFontMetrics().getHeight();
 
