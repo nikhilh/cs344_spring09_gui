@@ -172,7 +172,8 @@ def test():
 			    del_links.append(Link(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port))
 			    # if there was a flow delete it
 			    if(i.getOldStatsOUTChange()):
-				del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), int(i.getStatsChange()*8/1000), src_node, src_port, dst_node, dst_port, list()))
+				xput = int(i.getStatsChange()*8/(1000*POLL_INTERVAL))
+				del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), , src_node, src_port, dst_node, dst_port, list()))
 
 		    # if there is a new nbr and the link is up, add link and flow
 		    if((len(new_nbrs) > 0) and i.isLinkUp()):
@@ -186,7 +187,8 @@ def test():
 		    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
 		    dst_port = get_nbr_iface(new_nbrs[0])
 		    if(dst_port >= 0):
-			add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), int(i.getStatsChange()*8/1000), src_node, src_port, dst_node, dst_port, list()))
+			xput = int(i.getStatsChange()*8/(1000*POLL_INTERVAL))
+			add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), xput, src_node, src_port, dst_node, dst_port, list()))
 		# else delete it
 		elif(len(old_nbrs) > 0):
 		    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
@@ -348,7 +350,8 @@ def test():
 			print r.routerID + ":" + str(src_port) + " -> " + i.neighbors[0].getNeighborID() + ":" + str(dst_port)
 			linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
 			if(i.haveChangedStatsOUT()):
-			    flow = Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), int(i.getStatsChange()*8/1000), src_node, src_port, dst_node, dst_port, list())
+			    xput = int(i.getStatsChange()*8/(1000*POLL_INTERVAL))
+			    flow = Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), xput, src_node, src_port, dst_node, dst_port, list())
 			    flows.append(flow)
 			    print "Adding flow " + str(flow.flow_id) + ": " + str(flow.src_node.id) + ":" + str(flow.src_port) + " -> " + str(flow.dst_node.id) + ":" + str(flow.dst_port)
 	    if(len(linkspecs) > 0):

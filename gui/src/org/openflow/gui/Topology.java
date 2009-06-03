@@ -323,6 +323,9 @@ public class Topology {
         if(flows == null)
             flowsMap.put(newFlow.getID(), new Flow[]{newFlow});
         else {
+        	for(Flow f: flows) {
+        		f.setThroughput(newFlow.getThroughput());
+        	}
         	return;
             // flow(s) with this ID already exist; add it to the list
             /*Flow[] newFlows = new Flow[flows.length + 1];
