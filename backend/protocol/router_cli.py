@@ -9,6 +9,12 @@ POLL_INTERVAL = float(0.2)
 FLOW_THRESHOLD_RATE = 50    #KBytes/sec
 FLOW_THRESHOLD_BYTES = FLOW_THRESHOLD_RATE*1024*POLL_INTERVAL
 
+class Host:
+    
+    def __init__(self, host_ip, rtr_ip):
+	self.ip = host_ip
+	self.nbr = rtr_ip
+
 class Router:
     
     def __init__(self, host, port):
@@ -203,11 +209,13 @@ class Router:
                 break
             res = link_re.search(line)
             if res is not None:
-                self.getInterface(res.group(1)).setLinkStatusUpdateOld(int(res.group(2)))
+                iface = self.getInterface(res.group(1))
+		if (iface is not None):
+		    iface.setLinkStatusUpdateOld(int(res.group(2)))
 
     # updates neighbors
     def updateNeighbors(self):
-        ifline_re = re.compile('(\w+):\s+neighbors:')
+        ifline_re = re.compile('(\w+):\s+\w*\s*neighbors:')
         neighline_re = re.compile('\s+RouterID:\s*(\d+\.\d+\.\d+\.\d+)\s+IP:\s*(\d+\.\d+\.\d+\.\d+)')
         self.sock.writeline("show ospf neigh")
         retVal = False
@@ -234,8 +242,8 @@ class Router:
     def getStats(self):
         ifline_re = re.compile('Interface:\s+(\w+)')
         packetIN_re = re.compile('Num\s+pkts\s+received:\s+(\d+)')
-        packetOUT_re = re.compile('Num\s+bytes\s+received:\s+(\d+)')
-        bytesIN_re = re.compile('Num\s+pkts\s+sent:\s+(\d+)')
+        bytesIN_re = re.compile('Num\s+bytes\s+received:\s+(\d+)')
+        packetOUT_re = re.compile('Num\s+pkts\s+sent:\s+(\d+)')
         bytesOUT_re = re.compile('Num\s+bytes\s+sent:\s+(\d+)')
         self.sock.writeline("adv stats")
         last_intf = None
@@ -250,7 +258,8 @@ class Router:
             res = ifline_re.search(line)
             if res is not None:
                 last_intf = self.getInterface(res.group(1))
-                last_intf.backupStats()
+		if(last_intf is not None):
+		    last_intf.backupStats()
             res = packetIN_re.search(line)
             if res is not None:
                 if(last_intf is not None):
@@ -353,8 +362,11 @@ class RouterInterface:
     def getOldStats(self):
         return self.old_stats
 
-    def getStatsChange(self):
+    def getStatsChangeOUT(self):
         return (self.getStats().getBytesOUT() - self.getOldStats().getBytesOUT())
+
+    def getStatsChangeIN(self):
+        return (self.getStats().getBytesIN() - self.getOldStats().getBytesIN())
 
     def backupStats(self):
         self.old_statsIN_change = self.haveChangedStatsIN() 
@@ -367,7 +379,8 @@ class RouterInterface:
 
     # checks for IN stats change, returns True if changed
     def haveChangedStatsIN(self):
-        return not self.getStats().eqIN( self.getOldStats() )
+        ret =  not self.getStats().eqIN( self.getOldStats() )
+	return ret
 
     # checks for OUT stats change, returns True if changed
     def haveChangedStatsOUT(self):

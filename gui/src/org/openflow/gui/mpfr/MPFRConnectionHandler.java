@@ -27,6 +27,20 @@ public class MPFRConnectionHandler extends ConnectionHandler implements
 		this.manager = manager;
 		manager.addDrawableEventListener(this);
 		manager.addCheckBoxListener(this);
+		
+		// Clear Multipath and Fast-Reroute
+		try {
+			connection.sendMessage(new SetMPFR(OFGMessageType.SET_MPFR, SetMPFR.TYPE_MP, (short)0));
+		}
+		catch (IOException excp) {
+			System.out.println(excp.toString());
+		}
+		try {
+			connection.sendMessage(new SetMPFR(OFGMessageType.SET_MPFR, SetMPFR.TYPE_FR, (short)0));
+		}
+		catch (IOException excp) {
+			System.out.println(excp.toString());
+		}
 	}
 
 	@Override

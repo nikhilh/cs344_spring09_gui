@@ -122,7 +122,7 @@ public class PZWindowEventListener implements ComponentListener,
         PZManager manager = window.getManager();
         
         if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_O) {
-            String file = getFilename("What file do you want to save to?", manager.getLastConfigFilename());
+            String file = getFilename("What file do you want to open from?", manager.getLastConfigFilename());
             if(file != null)
                 manager.loadDrawablePositionsFromFile(file);
         }

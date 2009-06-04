@@ -57,6 +57,7 @@ MPFR_MESSAGES.append(SetMPFR)
 
 MPFR_PROTOCOL = LTProtocol(OFG_MESSAGES + MPFR_MESSAGES, 'H', 'B')
 rtrs = list()
+hosts = list()
 GIGABIT = 1000000000
 
 def run_mpfr_server(port, recv_callback):
@@ -103,6 +104,11 @@ def test():
 		    return (ip_to_dpid(r.routerID), get_port(i.name),)
 	return (-1, -1,)
 
+    def get_host_of_rtr(iface):
+	for h in hosts:
+	    if (h.nbr == iface.ip):
+		return (ip_to_dpid(h.ip), 0,)
+	return (-1, -1,)
 
     # simply print out all received messages
     def print_ltm(xport, ltm):
@@ -172,8 +178,8 @@ def test():
 			    del_links.append(Link(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port))
 			    # if there was a flow delete it
 			    if(i.getOldStatsOUTChange()):
-				xput = int(i.getStatsChange()*8/(1000*POLL_INTERVAL))
-				del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), , src_node, src_port, dst_node, dst_port, list()))
+				xput = int(i.getStatsChangeOUT()*8/(1000*POLL_INTERVAL))
+				del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), xput, src_node, src_port, dst_node, dst_port, list()))
 
 		    # if there is a new nbr and the link is up, add link and flow
 		    if((len(new_nbrs) > 0) and i.isLinkUp()):
@@ -182,21 +188,46 @@ def test():
 			if(dst_port >= 0):
 			    add_linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
 
-		# if there is a flow add it
-		if(i.haveChangedStatsOUT() and (len(new_nbrs) > 0)):
-		    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
-		    dst_port = get_nbr_iface(new_nbrs[0])
-		    if(dst_port >= 0):
-			xput = int(i.getStatsChange()*8/(1000*POLL_INTERVAL))
+		(host_id, host_port) = get_host_of_rtr(i)
+		# if there is a flow going out add it
+		if(i.haveChangedStatsOUT()):
+		    # if there is a flow to a router add it
+		    if(len(new_nbrs) > 0):
+			dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(new_nbrs[0].getNeighborID()))
+			dst_port = get_nbr_iface(new_nbrs[0])
+			if(dst_port >= 0):
+			    xput = int(i.getStatsChangeOUT()*8/(1000*POLL_INTERVAL))
+			    add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), xput, src_node, src_port, dst_node, dst_port, list()))
+		    # if there is a flow to a host add it
+		    elif(host_id > 0):
+			dst_node = Node(Node.TYPE_HOST, host_id)
+			dst_port = host_port
+			xput = int(i.getStatsChangeOUT()*8/(1000*POLL_INTERVAL))
 			add_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), xput, src_node, src_port, dst_node, dst_port, list()))
+
 		# else delete it
-		elif(len(old_nbrs) > 0):
-		    dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
-		    dst_port = get_nbr_iface(old_nbrs[0], False)
-		    if(dst_port >= 0):
-			del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), 0, src_node, src_port, dst_node, dst_port, list()))
 		else:
-		    print "Interface " + i.getName() + ": No change in flows: link-status ("+ str(i.wasLinkUp()) + "," +str(i.isLinkUp()) + ") , or neighbor-list (" + str(len(old_nbrs)) + "," + str(len(new_nbrs)) + "), or stats (" + str(i.getOldStatsOUTChange()) + "," + str(i.haveChangedStatsOUT()) + ")"
+		    # if there is no flow to a router delete it
+		    if(len(old_nbrs) > 0):
+			dst_node = Node(Node.TYPE_OPENFLOW_SWITCH, ip_to_dpid(old_nbrs[0].getNeighborID()))
+			dst_port = get_nbr_iface(old_nbrs[0], False)
+			if(dst_port >= 0):
+			    del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), 0, src_node, src_port, dst_node, dst_port, list()))
+		    # if there is no flow to a host delete it
+		    elif(host_id > 0):
+			dst_node = Node(Node.TYPE_HOST, host_id)
+			dst_port = host_port
+			del_flows.append(Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), 0, src_node, src_port, dst_node, dst_port, list()))
+
+		if(host_id > 0):
+		    host_node = Node(Node.TYPE_HOST, host_id)
+		    # if there is a flow from a host add it
+		    if(i.haveChangedStatsIN()):
+			xput = int(i.getStatsChangeIN()*8/(1000*POLL_INTERVAL))
+			add_flows.append(Flow(Flow.TYPE_UNKNOWN, host_id, xput, host_node, host_port, src_node, src_port, list()))
+		    # else delete it
+		    else:
+			del_flows.append(Flow(Flow.TYPE_UNKNOWN, host_id, 0, host_node, host_port, src_node, src_port, list()))
 
 	    if(len(del_links) > 0):
 		server.send_msg_to_client(conn, LinksDel(del_links))
@@ -221,48 +252,6 @@ def test():
 
     # when the gui connects, tell it about the modules and nodes
     def new_conn_callback(conn):
-	################# GUI debug ###############
-	################# must be deleted #########
-
-	rtr_nodes = [
-		Node(Node.TYPE_OPENFLOW_SWITCH, 1),
-		Node(Node.TYPE_OPENFLOW_SWITCH, 2),
-		Node(Node.TYPE_OPENFLOW_SWITCH, 3),
-		Node(Node.TYPE_OPENFLOW_SWITCH, 4),
-		]
-	host_nodes = [
-		Node(Node.TYPE_HOST, 11),
-		Node(Node.TYPE_HOST, 13),
-		]
-	rtr_links = [
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 2, GIGABIT),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 1, GIGABIT),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, GIGABIT),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, GIGABIT),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 4), 2, GIGABIT),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 4), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 1, GIGABIT),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 4), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 2, GIGABIT),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 2, Node(Node.TYPE_OPENFLOW_SWITCH, 4), 1, GIGABIT),
-		]
-	host_links = [
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_HOST, 11), 0, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 0, GIGABIT),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 0, Node(Node.TYPE_HOST, 11), 0, GIGABIT),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_HOST, 13), 0, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 0, GIGABIT),
-		LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 0, Node(Node.TYPE_HOST, 13), 0, GIGABIT),
-		]
-	flows = [
-		Flow(Flow.TYPE_UNKNOWN, 12345, 1000, Node(Node.TYPE_OPENFLOW_SWITCH, 1), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 2, list()),
-		Flow(Flow.TYPE_UNKNOWN, 54321, 1100, Node(Node.TYPE_OPENFLOW_SWITCH, 2), 1, Node(Node.TYPE_OPENFLOW_SWITCH, 3), 2, list()),
-		]
-	server.send_msg_to_client(conn, NodesAdd(rtr_nodes))
-	server.send_msg_to_client(conn, NodesAdd(host_nodes))
-	server.send_msg_to_client(conn, LinksAdd(host_links))
-	server.send_msg_to_client(conn, LinksAdd(rtr_links))
-	server.send_msg_to_client(conn, FlowsAdd(flows))
-
-	return
-	###########################################
-
 	# read in router information
 	try:
 	    f = open('routers.txt', 'r')
@@ -283,6 +272,7 @@ def test():
 
 	# Get updates the first time (do it 2 times! to get flow info)
 	for r in rtrs:
+	    print "Updating router " + r.routerID
 	    r.checkLinkStatus()
 	    r.updateNeighbors()
 	    r.getStats()
@@ -309,26 +299,28 @@ def test():
 	    return
 	lines = f.readlines()
 	f.close()
-	hosts = []
+	hosts_list = []
 	host_linkspecs = []
 	host_re = re.compile("(\d+\.\d+\.\d+\.\d+)\s+(\d+\.\d+\.\d+\.\d+)")
 	for line in lines:
-	    res = rtr_re.search(line)
+	    res = host_re.search(line)
 	    if res is not None:
 		host_ip = res.group(1)
-		src_node = ip_to_dpid(host_ip)
+		src_node = Node(Node.TYPE_HOST, ip_to_dpid(host_ip))
 		src_port = 0
 		rtr_ip = res.group(2)
+		hosts.append(Host(host_ip, rtr_ip))
 		print "Drawing node and flows for host " + host_ip
 		(dst_dpid, dst_port) = get_host_nbr(rtr_ip)
-		hosts.append(Node(Node.TYPE_HOST, src_node))
 		if(dst_dpid > 0 and dst_port >= 0):
-			host_linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
-			host_linkspecs.append(LinkSpec(Link.TYPE_WIRE, dst_node, dst_port, src_node, src_port, GIGABIT))
-			print host_ip + ":" + str(src_port) + " -> " + rtr_ip + ":" + str(dst_port)
-			print rtr_ip + ":" + str(dst_port) + " -> " + host_ip + ":" + str(src_port)
+		    host_linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, Node(Node.TYPE_OPENFLOW_SWITCH, dst_dpid), dst_port, GIGABIT))
+		    host_linkspecs.append(LinkSpec(Link.TYPE_WIRE, Node(Node.TYPE_OPENFLOW_SWITCH, dst_dpid), dst_port, src_node, src_port, GIGABIT))
+		    print host_ip + ":" + str(src_port) + " -> " + rtr_ip + ":" + str(dst_port)
+		    print rtr_ip + ":" + str(dst_port) + " -> " + host_ip + ":" + str(src_port)
 	if(len(hosts) > 0):
-	    server.send_msg_to_client(conn, NodesAdd(hosts))
+	    for h in hosts:
+		hosts_list.append(Node(Node.TYPE_HOST, ip_to_dpid(h.ip)))
+	    server.send_msg_to_client(conn, NodesAdd(hosts_list))
 	if(len(host_linkspecs) > 0):
 	    server.send_msg_to_client(conn, LinksAdd(host_linkspecs))
 
@@ -350,7 +342,7 @@ def test():
 			print r.routerID + ":" + str(src_port) + " -> " + i.neighbors[0].getNeighborID() + ":" + str(dst_port)
 			linkspecs.append(LinkSpec(Link.TYPE_WIRE, src_node, src_port, dst_node, dst_port, GIGABIT))
 			if(i.haveChangedStatsOUT()):
-			    xput = int(i.getStatsChange()*8/(1000*POLL_INTERVAL))
+			    xput = int(i.getStatsChangeOUT()*8/(1000*POLL_INTERVAL))
 			    flow = Flow(Flow.TYPE_UNKNOWN, ip_to_dpid(i.ip), xput, src_node, src_port, dst_node, dst_port, list())
 			    flows.append(flow)
 			    print "Adding flow " + str(flow.flow_id) + ": " + str(flow.src_node.id) + ":" + str(flow.src_port) + " -> " + str(flow.dst_node.id) + ":" + str(flow.dst_port)

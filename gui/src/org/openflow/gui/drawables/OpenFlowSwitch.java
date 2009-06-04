@@ -11,6 +11,7 @@ import java.awt.geom.Ellipse2D;
 import org.openflow.gui.net.protocol.NodeType;
 import org.openflow.protocol.SwitchDescriptionStats;
 import org.openflow.util.string.DPIDUtil;
+import org.openflow.util.string.IPUtil;
 import org.pzgui.icon.ImageIcon;
 import org.pzgui.icon.ShapeIcon;
 
@@ -72,8 +73,9 @@ public class OpenFlowSwitch extends NodeWithPorts {
         // display switch description stats on mouse over
         //if(this.isHovered() || this.isSelected()) {
         	gfx.setFont(dpidFont);
-            gfx.drawString(DPIDUtil.dpidToHex(getID()), x, y);
-            y += gfx.getFontMetrics().getHeight();
+            //gfx.drawString(DPIDUtil.dpidToHex(getID()), x, y);
+            gfx.drawString(IPUtil.toString((int)getID()), x, y);
+        	y += gfx.getFontMetrics().getHeight();
 
             if(isStringSet(manufacturer)) {
                 gfx.drawString(manufacturer, x, y);

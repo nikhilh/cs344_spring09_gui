@@ -1,8 +1,9 @@
 package org.openflow.gui.mpfr;
 
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
@@ -26,15 +27,23 @@ public class MPFRLayoutManager extends PZLayoutManager {
 		/**
 		   * The MPFR checkboxes.
 		   */
-
 		mpCheckBox.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
 		frCheckBox.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
-		mpfrPanel.setLayout(new FlowLayout());
 		mpfrPanel.setBackground(Color.getHSBColor((float)0.0, (float)0.0, (float)0.7));
 		Border blackline=BorderFactory.createLineBorder(Color.GRAY, 2);
 		mpfrPanel.setBorder(blackline);
-		mpfrPanel.add(mpCheckBox);
-		mpfrPanel.add(frCheckBox);
+		mpfrPanel.setLayout(new GridBagLayout());
+		
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		mpfrPanel.add(mpCheckBox, c);
+		
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridy = 0;
+		mpfrPanel.add(frCheckBox, c);
 
 	}
 	
