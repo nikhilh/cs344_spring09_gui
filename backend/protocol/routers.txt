@@ -1,4 +1,6 @@
 rm128-1.stanford.edu 2300
+rm128-2.stanford.edu 2300
 rm128-3.stanford.edu 2300
 rm128-12.stanford.edu 2300
+rm128-13.stanford.edu 2300
 rm128-14.stanford.edu 2300
