@@ -5,8 +5,6 @@ import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Rectangle2D;
-
 import org.pzgui.icon.GeometricIcon;
 import org.pzgui.icon.Icon;
 import org.pzgui.icon.ShapeIcon;

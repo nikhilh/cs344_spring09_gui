@@ -13,7 +13,6 @@ import org.openflow.protocol.SwitchDescriptionStats;
 import org.openflow.util.string.DPIDUtil;
 import org.openflow.util.string.IPUtil;
 import org.pzgui.icon.ImageIcon;
-import org.pzgui.icon.ShapeIcon;
 
 /**
  * Describes an OpenFlow switch.

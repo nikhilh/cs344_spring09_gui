@@ -8,7 +8,6 @@ import java.awt.geom.Rectangle2D;
 import org.openflow.gui.net.protocol.NodeType;
 import org.openflow.util.string.IPUtil;
 import org.pzgui.icon.ImageIcon;
-import org.pzgui.icon.ShapeIcon;
 
 /**
  * Describes a host.
