@@ -384,12 +384,14 @@ public class Link extends AbstractDrawable implements Edge<NodeWithPorts> {
     }
     
     private void drawWiredLinkNoPrep(Graphics2D gfx) {
-        Vector2i p1 = new Vector2i(src.getX() + offsetX, src.getY() + offsetY);
-        Vector2i p2 = new Vector2i(dst.getX() + offsetX, dst.getY() + offsetY);
+    	Vector2i p1_tmp = new Vector2i(src.getX() + offsetX, src.getY() + offsetY);
+        Vector2i p2_tmp = new Vector2i(dst.getX() + offsetX, dst.getY() + offsetY);
         
+        Vector2i p1 = IntersectionFinder.intersect(p2_tmp, p1_tmp, src.getWidth()-offsetX, src.getHeight()-offsetY);
+        Vector2i p2 = IntersectionFinder.intersect(p1_tmp, p2_tmp, dst.getWidth()-offsetX, dst.getHeight()-offsetY);
+       
         // draw an arrow head on directed links
         if(Options.USE_DIRECTED_LINKS) {
-            p2 = IntersectionFinder.intersect(p1, p2, dst.getWidth(), dst.getHeight());
             gfx.fill(getArrowHead(ARROW_HEAD_SIZE, p1.x, p1.y, p2.x, p2.y));
         }
         
@@ -567,8 +569,16 @@ public class Link extends AbstractDrawable implements Edge<NodeWithPorts> {
         if(ocount == numOtherLinks)
             ocount = -ocount;
         
-        offsetX = (LINE_WIDTH+2) * ocount;
-        offsetY = (LINE_WIDTH+2) * ocount;
+        int offsetScale = (LINE_WIDTH+2) * ocount;
+        Vector2f linkVec = new Vector2f(dst.getX() - src.getX(), dst.getY() - src.getY());
+        Vector2f dirVec = Vector2f.makeUnit(linkVec);
+        Vector2f perpVec = new Vector2f(dirVec.y, -dirVec.x);
+        if(perpVec.y < 0) {
+        	perpVec.y = -perpVec.y;
+        	perpVec.x = -perpVec.x;
+        }
+        offsetX = (int)(perpVec.x * offsetScale);
+        offsetY = (int)(perpVec.y * offsetScale);
         
         updateBoundingBox(src.getX()+offsetX, src.getY()+offsetY, 
                           dst.getX()+offsetX, dst.getY()+offsetY);
