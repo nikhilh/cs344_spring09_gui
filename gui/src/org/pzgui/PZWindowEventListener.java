@@ -172,6 +172,7 @@ public class PZWindowEventListener implements ComponentListener,
     public void mousePressed(MouseEvent e) {
         PZWindow window = getWindow(e);
         PZManager manager = window.getManager();
+        window.getCanvas().requestFocus();
         
         int x = window.getMX(e);
         int y = window.getMY(e);

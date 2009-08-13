@@ -215,11 +215,17 @@ public class Flow extends AbstractDrawable {
             	dir.x = - dir.x;
             }
             dir = Vector2f.makeUnit(dir);
+            Vector2f perpDir = new Vector2f(-dir.y, dir.x);
+            if(perpDir.y > 0) {
+            	perpDir.y = - perpDir.y;
+            	perpDir.x = - perpDir.x;
+            }
+            Vector2f perpOffset = Vector2f.multiply(perpDir, (float)getPointSize());
             int xputMbps = (int)(getThroughput()/100);
             String xputString = Double.toString(xputMbps/10.0) + " Mbps";
             FontMetrics currentMetrics = gfx.getFontMetrics(xputFont);
             Vector2f offset = Vector2f.multiply(dir, currentMetrics.stringWidth(xputString)/2);
-            Vector2f textRenderPoint = Vector2f.add(midPoint, new Vector2f((float)0.0, -(float)getPointSize()));
+            Vector2f textRenderPoint = Vector2f.add(midPoint, perpOffset);
             textRenderPoint = Vector2f.subtract(textRenderPoint, offset);
             double rotAngle = Math.atan2(dir.y, dir.x);
             gfx.rotate(rotAngle, textRenderPoint.x, textRenderPoint.y);

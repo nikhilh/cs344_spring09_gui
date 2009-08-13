@@ -47,7 +47,7 @@ public abstract class Node extends AbstractLayoutable implements Vertex<Link> {
     // ------------------- Drawing ------------------ //
     
     /** whether to draw names on nodes */
-    public static boolean SHOW_NAMES = false;
+    public static boolean SHOW_NAMES = true;
     
     /** ratio to use when outlining the shape */
     public static final double OUTLINE_RATIO = 1.35;

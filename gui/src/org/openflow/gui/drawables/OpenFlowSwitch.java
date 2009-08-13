@@ -12,6 +12,7 @@ import org.openflow.gui.net.protocol.NodeType;
 import org.openflow.protocol.SwitchDescriptionStats;
 import org.openflow.util.string.DPIDUtil;
 import org.openflow.util.string.IPUtil;
+import org.pzgui.Constants;
 import org.pzgui.icon.ImageIcon;
 
 /**
@@ -64,15 +65,18 @@ public class OpenFlowSwitch extends NodeWithPorts {
         super.drawObject(gfx);
         gfx.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
         
-        int x = getX() - getIcon().getWidth() / 2;
+        int x = getX();
         int y = getY() - getIcon().getHeight() / 2;
-        if(SHOW_NAMES)
-            y += gfx.getFontMetrics().getHeight();
+        gfx.setFont(dpidFont);
+        
+        if(SHOW_NAMES) {
+            y -= gfx.getFontMetrics().getDescent();
+            x -= gfx.getFontMetrics().stringWidth(IPUtil.toString((int)getID()))/2;
+        }
             
         // display switch description stats on mouse over
         //if(this.isHovered() || this.isSelected()) {
-        	gfx.setFont(dpidFont);
-            //gfx.drawString(DPIDUtil.dpidToHex(getID()), x, y);
+        	
             gfx.drawString(IPUtil.toString((int)getID()), x, y);
         	y += gfx.getFontMetrics().getHeight();
 
@@ -94,6 +98,8 @@ public class OpenFlowSwitch extends NodeWithPorts {
             if(isStringSet(serial_num))
                 gfx.drawString(serial_num, x, y);
         //}
+         
+        gfx.setFont(Constants.FONT_DEFAULT);
     }
     
  

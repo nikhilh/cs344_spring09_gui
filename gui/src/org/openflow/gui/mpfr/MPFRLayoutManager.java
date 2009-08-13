@@ -1,9 +1,13 @@
 package org.openflow.gui.mpfr;
 
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.LayoutManager;
 import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
@@ -15,7 +19,7 @@ import javax.swing.border.Border;
 import org.pzgui.PZWindow;
 import org.pzgui.layout.PZLayoutManager;
 
-public class MPFRLayoutManager extends PZLayoutManager {
+public class MPFRLayoutManager extends PZLayoutManager implements LayoutManager{
 
 	public static final int RESERVED_HEIGHT_BOTTOM = 100;
 	private JPanel mpfrPanel = new JPanel();
@@ -29,8 +33,8 @@ public class MPFRLayoutManager extends PZLayoutManager {
 		   */
 		mpCheckBox.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
 		frCheckBox.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
-		mpfrPanel.setBackground(Color.getHSBColor((float)0.0, (float)0.0, (float)0.7));
-		Border blackline=BorderFactory.createLineBorder(Color.GRAY, 2);
+		mpfrPanel.setBackground(Color.YELLOW);
+		Border blackline=BorderFactory.createLineBorder(Color.BLACK, 2);
 		mpfrPanel.setBorder(blackline);
 		mpfrPanel.setLayout(new GridBagLayout());
 		
@@ -56,6 +60,7 @@ public class MPFRLayoutManager extends PZLayoutManager {
             w.setCustomTitle("CS344 - MultiPath Routing and Fast Reroute");
             
             // reserve space for a custom panel
+            w.setLayout(this);
             w.getContentPane().add(mpfrPanel);
             w.setReservedHeightBottom(RESERVED_HEIGHT_BOTTOM);
             w.setMySize(w.getWidth(), w.getHeight(), w.getZoom());
@@ -69,14 +74,44 @@ public class MPFRLayoutManager extends PZLayoutManager {
      */
     public void setLayoutSize(int w, int h) {
         super.setLayoutSize(w, h);
-        int margin = 10; 
-        mpfrPanel.setBounds(0, h + margin, w, RESERVED_HEIGHT_BOTTOM - 2 * margin);
+        int top_margin = 25;
+        int bottom_margin = 10;
+        mpfrPanel.setBounds(0, h + top_margin, w, RESERVED_HEIGHT_BOTTOM - (top_margin + bottom_margin));
     }
     
     public void addCheckBoxListener(ItemListener l) {
     	mpCheckBox.addItemListener(l);
     	frCheckBox.addItemListener(l);
     }
+
+	@Override
+	public void addLayoutComponent(String name, Component comp) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void layoutContainer(Container parent) {
+		this.setLayoutSizeBasedOnVisibleArea();
+	}
+
+	@Override
+	public Dimension minimumLayoutSize(Container parent) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Dimension preferredLayoutSize(Container parent) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void removeLayoutComponent(Component comp) {
+		// TODO Auto-generated method stub
+		
+	}
 
 
 }
